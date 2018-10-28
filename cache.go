@@ -119,7 +119,23 @@ func (t *Trie) Get(name string) (*Record, bool) {
 		t.remove(name)
 		return nil, false
 	}
+
+	// update ttl
+	ttl := uint32(r.Expired.Sub(time.Now()))
+	updateTTLOf(r.Msg.Answer, ttl)
+	updateTTLOf(r.Msg.Ns, ttl)
+	updateTTLOf(r.Msg.Extra, ttl)
 	return r, true
+}
+
+func updateTTLOf(rrs []dns.RR, ttl uint32) {
+	if len(rrs) == 0 {
+		return
+	}
+	for i := range rrs {
+		h := rrs[i].Header()
+		h.Ttl = ttl
+	}
 }
 
 // Find finds the data of the key `name`
